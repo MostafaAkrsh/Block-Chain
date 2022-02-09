@@ -1,20 +1,27 @@
 from glob import glob
 import hashlib
 import json
+from random import randint
 import time
 
 
 MINING_REWARD = 10
 PUZZLE_DIFFICULTY = 1
-
+ATTACKER_POWER = 75
 
 blockchain = []
 open_transactions = []
 owner = 'Mostafa'
 participants = set()
+main_blockchain = 'blockchain.txt'
+
+def load_specific(chain):
+    with open(chain,mode='r') as f:
+        file_content = f.readlines()
+        return json.loads(file_content[1])
 
 def load_data():
-    with open('blockchain.txt',mode='r') as f:
+    with open(main_blockchain,mode='r') as f:
         file_content = f.readlines()
         global blockchain
         global open_transactions
@@ -22,11 +29,19 @@ def load_data():
         blockchain = json.loads(file_content[1])
         open_transactions = json.loads(file_content[3])
         PUZZLE_DIFFICULTY = int(file_content[5])
+        if len(blockchain) == 0:
+            gensis_block = {
+                'previous_hash': '',
+                'index': 0,
+                'transactions': [],
+                'proof': 0
+            }
+            blockchain.append(gensis_block)
 
 load_data()
 
 def save_data():
-    with open('blockchain.txt',mode='w') as f:
+    with open(main_blockchain,mode='w') as f:
         f.write('blockchain\n')
         f.write(json.dumps(blockchain))
         f.write('\nopen transactions\n')
@@ -162,36 +177,56 @@ def verify_chain():
             continue
         if block['previous_hash'] != hash_block(blockchain[index-1]):
             return False
-        # if not valid_proof(block['transactions'][:-1],block['previous_hash'],block['proof']):
-        #     print('proof of work is invalid')
-        #     return False
     return True
 
 def verify_transactions():
     return all([verify_transaction(tx) for tx in open_transactions])
 
-if len(blockchain) == 0:
-    proof = proof_of_work()
 
-    gensis_block = {
-        'previous_hash': '',
-        'index': 0,
-        'transactions': [],
-        'proof': proof
-    }
 
-    blockchain.append(gensis_block)
+def check_longest_chain():
+    chain1 = load_specific('blockchain.txt')
+    chain2 = load_specific('blockchain2.txt')
+
+    global main_blockchain
+    try:
+        if len(chain1) >= len(chain2):
+            main_blockchain = 'blockchain.txt'
+            load_data()
+        else:
+            main_blockchain = 'blockchain2.txt'
+            load_data()
+    except:
+        main_blockchain = 'blockchain.txt'
+
+
+def Mining_Operation():
+    global PUZZLE_DIFFICULTY
+    global open_transactions
+    start_mining = time.time()
+    if mine_block():
+        open_transactions = []
+        stop_mining = time.time()
+        mining_time = stop_mining - start_mining
+        print('Miningtime:' + str(mining_time))
+        if mining_time >= 5:
+            PUZZLE_DIFFICULTY -= 1
+        elif mining_time <= 0.2:
+            PUZZLE_DIFFICULTY += 1
+        save_data()    
 
 waiting_for_input = True
 
 while waiting_for_input:
+    check_longest_chain()
     print('Please choose')
     print('1: Add a new transaction value')
     print('2: Mine a new block')
     print('3: Output the blockchain blocks')
     print('4: Output Participants')
-    print('5: Verify Transactions')
+    print('5: Check Longest Chain')
     print('h: Manipulate the chain')
+    print('l: Loop Mining')
     print('q: Quit')
     user_choice = get_user_choice()
     if user_choice == '1':
@@ -204,30 +239,45 @@ while waiting_for_input:
             print('Transaction Failed!')
         print(open_transactions)
     elif user_choice == '2':
-        start_mining = time.time()
-        if mine_block():
-            open_transactions = []
-            stop_mining = time.time()
-            mining_time = stop_mining - start_mining
-            print(mining_time)
-            if mining_time >= 5:
-                PUZZLE_DIFFICULTY -= 1
-            elif mining_time <= 0.2:
-                PUZZLE_DIFFICULTY += 1
-            save_data()
+            Mining_Operation()
     elif user_choice == '3':
         load_data()
         print_blockchain_elements()
     elif user_choice == '4':
         print(participants)
     elif user_choice == '5':
-        if verify_transaction():
-            print('All transaction are valid!')
-        else:
-            print('There are invalid transactions')
+        check_longest_chain()
+        print('longest chain is: '+main_blockchain)
     elif user_choice == 'h':
-        if len(blockchain) >= 2:
-            blockchain[-2] = [2]
+            attack_begin = time.time()
+
+            if main_blockchain == 'blockchain.txt':
+                main_blockchain = 'blockchain2.txt'
+                attacker_block_chain = 'blockchain2.txt'
+                correct_block_chain = 'blockchain.txt'
+            elif main_blockchain == 'blockchain2.txt':
+                main_blockchain = 'blockchain1.txt'
+                attacker_block_chain = 'blockchain.txt'
+                correct_block_chain = 'blockchain2.txt'
+
+            blockchain = blockchain[0:-1]
+            save_data()
+            two_attacker_blocks_counter = 0
+            while two_attacker_blocks_counter < 2:
+                if randint(0, 100) <= ATTACKER_POWER:
+                    owner = 'Mostafa'
+                    main_blockchain = attacker_block_chain
+                    Mining_Operation()
+                    two_attacker_blocks_counter += 1
+                else:
+                    owner = 'Maxwell'
+                    main_blockchain = correct_block_chain
+                    Mining_Operation()
+                    two_attacker_blocks_counter = 0
+            attack_end = time.time()
+            attack_time = attack_end - attack_begin
+            print('ATTACK HAS DONE! time required:' + str(attack_time))
+
     elif user_choice == 'q':
         waiting_for_input = False
     else:
