@@ -10,7 +10,7 @@ PUZZLE_DIFFICULTY = 1
 
 blockchain = []
 open_transactions = []
-owner = 'Mostafa'
+owner = 'Maxwell'
 participants = set()
 
 def load_data():
