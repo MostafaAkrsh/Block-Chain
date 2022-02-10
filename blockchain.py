@@ -3,11 +3,11 @@ import hashlib
 import json
 from random import randint
 import time
-
+import datetime
 
 MINING_REWARD = 10
 PUZZLE_DIFFICULTY = 1
-ATTACKER_POWER = 75
+ATTACKER_POWER = 51
 
 blockchain = []
 open_transactions = []
@@ -34,6 +34,7 @@ def load_data():
                 'previous_hash': '',
                 'index': 0,
                 'transactions': [],
+                "timestamp":str(datetime.datetime.now()),
                 'proof': 0
             }
             blockchain.append(gensis_block)
@@ -144,6 +145,7 @@ def mine_block():
         'previous_hash': hashed_block,
         'index': len(blockchain),
         'transactions': copied_transactions,
+        "timestamp":str(datetime.datetime.now()),
         'proof': proof
     }
     blockchain.append(block)
@@ -193,24 +195,28 @@ def check_longest_chain():
         if len(chain1) >= len(chain2):
             main_blockchain = 'blockchain.txt'
             load_data()
+            return 'blockchain.txt'
         else:
             main_blockchain = 'blockchain2.txt'
             load_data()
+            return 'blockchain2.txt'
     except:
         main_blockchain = 'blockchain.txt'
+        return 'blockchain.txt'
 
 
 def Mining_Operation():
     global PUZZLE_DIFFICULTY
     global open_transactions
-    start_mining = time.time()
     if mine_block():
         open_transactions = []
-        stop_mining = time.time()
-        mining_time = stop_mining - start_mining
+        block1 = blockchain[-1]
+        block2 = blockchain[-2]
+        mining_time = (datetime.datetime.strptime(block1["timestamp"], '%Y-%m-%d %H:%M:%S.%f')- datetime.datetime.strptime(block2["timestamp"], '%Y-%m-%d %H:%M:%S.%f')).total_seconds()
         print('Miningtime:' + str(mining_time))
         if mining_time >= 5:
-            PUZZLE_DIFFICULTY -= 1
+            if PUZZLE_DIFFICULTY != 1:
+                PUZZLE_DIFFICULTY -= 1
         elif mining_time <= 0.2:
             PUZZLE_DIFFICULTY += 1
         save_data()    
@@ -256,27 +262,30 @@ while waiting_for_input:
                 attacker_block_chain = 'blockchain2.txt'
                 correct_block_chain = 'blockchain.txt'
             elif main_blockchain == 'blockchain2.txt':
-                main_blockchain = 'blockchain1.txt'
+                main_blockchain = 'blockchain.txt'
                 attacker_block_chain = 'blockchain.txt'
                 correct_block_chain = 'blockchain2.txt'
 
-            blockchain = blockchain[0:-1]
+            blockchain1 = blockchain
+            blockchain2 = blockchain[0:-1]
+            blockchain = blockchain2
             save_data()
             two_attacker_blocks_counter = 0
-            while two_attacker_blocks_counter < 2:
+            while check_longest_chain() != attacker_block_chain:
                 if randint(0, 100) <= ATTACKER_POWER:
                     owner = 'Mostafa'
                     main_blockchain = attacker_block_chain
+                    blockchain = blockchain2
                     Mining_Operation()
-                    two_attacker_blocks_counter += 1
                 else:
                     owner = 'Maxwell'
                     main_blockchain = correct_block_chain
+                    blockchain = blockchain1
                     Mining_Operation()
-                    two_attacker_blocks_counter = 0
             attack_end = time.time()
             attack_time = attack_end - attack_begin
             print('ATTACK HAS DONE! time required:' + str(attack_time))
+            owner = 'Mostafa'
 
     elif user_choice == 'q':
         waiting_for_input = False

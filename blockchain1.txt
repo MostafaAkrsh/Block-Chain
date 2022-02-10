@@ -1,6 +1,0 @@
-blockchain
-[{"previous_hash": "", "index": 0, "transactions": [], "proof": 0}, {"previous_hash": "a93bc01ba42854e03622a737f6b84a9d43a5f0af42c5ffcb94de0007ff3e6812", "index": 1, "transactions": [{"sender": "MINING", "recipient": "Maxwell", "amount": 10}], "proof": 5}, {"previous_hash": "0afdc4aea3991f11fbdf507af66d250e9e9db46d1ee6939bbd8835b389ebf7ab", "index": 2, "transactions": [{"sender": "MINING", "recipient": "Maxwell", "amount": 10}], "proof": 385}, {"previous_hash": "00a8daad5dc419cab172e8fa3c97769c4086d377131102f73cc0352fc139eed3", "index": 3, "transactions": [{"sender": "MINING", "recipient": "Maxwell", "amount": 10}], "proof": 14417}]
-open transactions
-[]
-puzzle difficulty
-3
