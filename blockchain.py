@@ -2,12 +2,14 @@ from glob import glob
 import hashlib
 import json
 from random import randint
+import string
 import time
 import datetime
 
 MINING_REWARD = 10
 PUZZLE_DIFFICULTY = 1
-ATTACKER_POWER = 51
+ATTACKER_POWER = 75
+TIME = 0
 
 blockchain = []
 open_transactions = []
@@ -58,23 +60,25 @@ def get_last_blockchain_value():
     return blockchain[-1]
 
 def valid_proof(transactions,last_hash,proof):
+    global TIME
+    TIME = str(datetime.datetime.now())
     block = {
         'previous_hash': last_hash,
         'index': len(blockchain),
         'transactions': transactions,
+        'timestamp': TIME,
         'proof': proof
     }
     guess_hash = hash_block(block)
     print(guess_hash)
-    str = ''
-    return guess_hash[0:PUZZLE_DIFFICULTY] == str.zfill(PUZZLE_DIFFICULTY)
+    strr = ''
+    return guess_hash[0:PUZZLE_DIFFICULTY] == strr.zfill(PUZZLE_DIFFICULTY)
 
 
 def proof_of_work():
     if len(blockchain) != 0:
         last_block = blockchain[-1]
         last_hash = hash_block(last_block)
-
     elif len(blockchain) == 0:
         last_hash = ''
 
@@ -141,11 +145,13 @@ def mine_block():
     open_transactions.append(reward_transaction)
     proof = proof_of_work()
 
+    global TIME
+
     block = {
         'previous_hash': hashed_block,
         'index': len(blockchain),
         'transactions': copied_transactions,
-        "timestamp":str(datetime.datetime.now()),
+        "timestamp":TIME,
         'proof': proof
     }
     blockchain.append(block)
@@ -278,7 +284,7 @@ while waiting_for_input:
                     blockchain = blockchain2
                     Mining_Operation()
                 else:
-                    owner = 'Maxwell'
+                    owner = 'Mohamed'
                     main_blockchain = correct_block_chain
                     blockchain = blockchain1
                     Mining_Operation()
